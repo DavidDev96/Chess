@@ -1,14 +1,32 @@
 #include "Chessman.h"
 
-Chessman::Chessman(char symbol, bool is_white) {}
+Chessman::Chessman(char symbol, bool is_white) {
+  this->symbol = symbol;
+  is_white ? this->color = WHITE : this->color = BLACK;
+}
 
-char Chessman::get_symbol() const { return 0; }
-
-char Chessman::get_color() const { return 0; }
-
-bool Chessman::is_white() const { return false; }
-
-bool Chessman::can_move(int from_row, int from_col, int to_row, int to_col,
-                        const Chessboard& cb) const {
-  return false;
+void Chessman::get_info() const {
+  switch (this->symbol) {
+    case K:
+      cout << "KING";
+      break;
+    case Q:
+      cout << "QUEEN";
+      break;
+    case B:
+      cout << "BISHOP";
+      break;
+    case R:
+      cout << "ROOK";
+      break;
+    case N:
+      cout << "KNIGHT";
+      break;
+    case P:
+      cout << "PAWN";
+      break;
+    default:
+      break;
+  }
+  cout << " with position: (" << this->position.row << "|" << this->position.column << ")" << endl;
 }

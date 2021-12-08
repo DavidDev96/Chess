@@ -1,29 +1,23 @@
 #include "King.h"
 
-King::King(char symbol, bool is_white) {
-    this->position.x = 1;
-    this->position.y = 1;
-    this->color = color;
-    this->isEssential = isEssential;
-
+King::King(bool is_white) {
+  if (is_white) {
+    this->position.column = 3;
+    this->position.row = 7;
+  } else {
+    this->position.column = 3;
+    this->position.row = 0;
+  }
+  is_white ? this->color = WHITE : this->color = BLACK;
 }
 
-char King::get_symbol() const 
-{ 
-    return this->symbol; 
+void King::get_info() const {
+  cout << "KING"
+       << " with position: (" << this->position.row << "|"
+       << this->position.column << ")" << endl;
 }
 
-int King::get_color() const 
-{ 
-    return this->color; 
-}
-
-bool King::is_white() const 
-{ 
-    return this->color == 0 ? true : false; 
-}
-
-bool King::can_move(int from_row, int from_col, int to_row, int to_col,
-                    const Chessboard& cb) const {
-  return false;
-}
+//bool King::can_move(int from_row, int from_col, int to_row, int to_col,
+//                    const Chessboard& cb) const {
+//  return false;
+//}
