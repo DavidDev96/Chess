@@ -5,8 +5,8 @@
 using namespace std;
 
 // Q for Queens, K for Kings, R for Rooks, B for Bishops, K for Knights, P for
-// Pawns
-enum Figures { K = 'K', Q = 'Q', B = 'B', R = 'R', N = 'N', P = 'P' };
+// Pawns, M for Master, A for Archer
+enum Figures { K = 'K', Q = 'Q', B = 'B', R = 'R', N = 'N', P = 'P', M = 'M', A = 'A' };
 enum Colors { WHITE = 1, BLACK = 0 };
 
 struct Pos {
@@ -16,14 +16,14 @@ struct Pos {
 
 class Chessman {
  protected:          // only visible for inherited objects
-  int color{-1};  // White = 1, Black = 0
+  int color;  // White = 1, Black = 0
   char symbol{P};
   bool isEssential{false};  // will lead to a game over if loss
-  bool hasFallen{false};
   bool isSelected{false};
   Pos position;
 
  public:
+  bool hasFallen{false};
   explicit Chessman(char symbol = P, bool is_white = WHITE);
   virtual ~Chessman() {}
   virtual char get_symbol() const { return symbol; }
@@ -33,4 +33,5 @@ class Chessman {
   virtual bool is_essential() const { return isEssential; }
   virtual bool is_selected() const { return isSelected; }
   virtual void get_info() const;
+  virtual void kill();
 };

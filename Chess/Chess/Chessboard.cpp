@@ -2,7 +2,13 @@
 
 vector<Pos> possiblePositions;
 
-Chessboard::Chessboard(int size) { this->size = size; }
+Chessboard::Chessboard(int size) 
+{ 
+    //Chessman** board = (Chessman**)alloc(sizeof(Chessman)*size);
+    //auto temp = realloc(board, size);
+    //board = temp;
+    this->size = size; 
+}
 
 Chessboard::~Chessboard() { delete[] board; }
 
@@ -41,6 +47,11 @@ void Chessboard::create_figures() {
   board[6][5] = new Pawn(WHITE);
   board[6][6] = new Pawn(WHITE);
   board[6][7] = new Pawn(WHITE);
+
+  // TEST
+  //board[3][3] = new Bishop(WHITE);
+  //board[3][3] = new Master(WHITE);
+  board[4][4] = new Archer(WHITE);
 }
 
 bool Chessboard::is_game_over() const {
@@ -51,10 +62,11 @@ bool Chessboard::is_game_over() const {
             this->board[i][j]->has_fallen()) {
           if (this->board[i][j]->get_color() == WHITE) {
             cout << "BLACK is the winner!" << endl;
+            return true;
           } else {
             cout << "WHITE is the winner!" << endl;
+            return true;
           }
-          return true;
         }
       }
     }
@@ -80,7 +92,23 @@ bool Chessboard::can_capture_on(int row, int col, bool is_white) const {
   return false;
 }
 
-bool Chessboard::can_move_selection_to(int row, int col) const { return true; }
+bool Chessboard::can_move_selection_to(int row, int col) const {
+  bool validPosition = false;
+
+  std::vector<Pos>::iterator it = std::find_if(
+      begin(possiblePositions), end(possiblePositions), [&](const Pos& p) {
+        if (p.row == row && p.column == col) {
+          if (is_enemy_position(players_turn, p.row, p.column) ||
+              is_free_position(p.row, p.column)) {
+            validPosition = true;
+            return true;
+          }
+        } else {
+          return false;
+        }
+      });
+  return validPosition;
+}
 
 bool Chessboard::can_move(int from_row, int from_col, int to_row,
                           int to_col) const {
@@ -165,53 +193,145 @@ bool Chessboard::can_move(int from_row, int from_col, int to_row,
   }
 }
 
-void Chessboard::select_piece(int row, int col) {
-  this->board[row][col]->get_info();
-  this->selectedFigure = {row,col};
-  set_possible_positions(row, col);
-  show(true);
+bool Chessboard::selected_piece_valid(int row, int col) {
+  this->selectedFigure = {row, col};
+  if (!set_possible_positions(row, col)) { 
+      return false;  
+  }
+  return true;
+}
+
+void Chessboard::move_selection_to(int row, int col) {
+  if (is_enemy_position(players_turn, row, col)) {
+    if (board[row][col] != NULL) {
+      board[row][col]->kill();
+    }
+    is_game_over();
+    board[row][col] = NULL;
+  }
+  board[row][col] = board[selectedFigure.row][selectedFigure.column];
+  board[selectedFigure.row][selectedFigure.column] = NULL;
+  cout << "Figure moved to (" << row << "|" << col << ")" << endl;
+  possiblePositions.clear();
   players_turn == WHITE ? players_turn = BLACK : players_turn = WHITE;
 }
 
-void Chessboard::move_selection_to(int row, int col) 
-{
-    if (is_enemy_position(players_turn, row, col)) {
-        // Killed an enemy
-        board[row][col] = NULL;
-    }
-    board[row][col] = board[selectedFigure.row][selectedFigure.column];
-    board[selectedFigure.row][selectedFigure.column] = NULL;
-    cout << "Figure moved to (" << row << "|" << col << ")" << endl;
-}
-
-void Chessboard::set_possible_positions(int row, int col) const {
-  switch (this->board[row][col]->get_symbol()) {
+bool Chessboard::set_possible_positions(int row, int col) const {
+  int tempCol = col;
+  switch (board[row][col]->get_symbol()) {
     case P:
-      // White Pawn
-      if (this->board[row][col]->is_white()) {
-        possiblePositions.push_back({row - 1, col});
-        if (is_enemy_position(WHITE, row - 1, col - 1)) {
-          possiblePositions.push_back({row - 1, col - 1});
-        }
-        if (is_enemy_position(WHITE, row - 1, col + 1)) {
-          possiblePositions.push_back({row - 1, col + 1});
-        }
-        // Black Pawn
-      } else {
+      // BLACK Pawn
+      if (board[row][col]->is_white()) {
         possiblePositions.push_back({row + 1, col});
-        if (is_enemy_position(WHITE, row + 1, col - 1)) {
+        if (is_enemy_position(players_turn, row + 1, col - 1)) {
           possiblePositions.push_back({row + 1, col - 1});
         }
-        if (is_enemy_position(WHITE, row + 1, col + 1)) {
+        if (is_enemy_position(players_turn, row + 1, col + 1)) {
           possiblePositions.push_back({row + 1, col + 1});
+        }
+        // WHITE Pawn
+      } else {
+        possiblePositions.push_back({row - 1, col});
+        if (is_enemy_position(players_turn, row - 1, col - 1)) {
+          possiblePositions.push_back({row - 1, col - 1});
+        }
+        if (is_enemy_position(players_turn, row - 1, col + 1)) {
+          possiblePositions.push_back({row - 1, col + 1});
         }
       }
       break;
     case K:
-        break;
+      is_enemy_position(players_turn, row - 1, col) || is_free_position(row - 1, col) ? possiblePositions.push_back({row - 1, col}) : void();
+      is_enemy_position(players_turn, row - 1, col -1) || is_free_position(row - 1, col -1) ? possiblePositions.push_back({row - 1, col - 1}) : void ();
+      is_enemy_position(players_turn, row - 1, col + 1) || is_free_position(row - 1, col + 1) ? possiblePositions.push_back({row - 1, col + 1}) : void();
+      is_enemy_position(players_turn, row, col - 1) || is_free_position(row, col - 1) ? possiblePositions.push_back({row, col - 1}) : void();
+      is_enemy_position(players_turn, row, col + 1) || is_free_position(row, col + 1) ? possiblePositions.push_back({row, col + 1}) : void();
+      is_enemy_position(players_turn, row + 1, col) || is_free_position(row + 1, col) ?  possiblePositions.push_back({row + 1, col}) : void();
+      is_enemy_position(players_turn, row + 1, col - 1) || is_free_position(row + 1, col - 1) ?  possiblePositions.push_back({row + 1, col - 1}) : void();
+      is_enemy_position(players_turn, row + 1, col + 1) || is_free_position(row + 1, col + 1) ?  possiblePositions.push_back({row + 1, col + 1}) : void();
+      break;
+    case R:
+      // moving vertically
+      for (int i = row; i < size; i++) {
+        if (!is_free_position(i, col)) { break; }
+        is_enemy_position(players_turn, i, col) || is_free_position(i, col) ? possiblePositions.push_back({i, col}) : void();
+        if (is_enemy_position(players_turn, i, col)) { break; }
+      }
+      for (int i = row; i-- > 0;) {
+        if (!is_free_position(i, col)) { break; }
+        is_enemy_position(players_turn, i, col) || is_free_position(i, col) ? possiblePositions.push_back({i, col}) : void();
+        if (is_enemy_position(players_turn, i, col)) { break; }
+      }
+      // moving horizontal
+      for (int i = col; i < size; i++) {
+        if (!is_free_position(row, i)) { break; }
+        is_enemy_position(players_turn, row, i) || is_free_position(row, i) ? possiblePositions.push_back({row, i}) : void();
+        if (is_enemy_position(players_turn, row, i)) { break; }
+      }
+      for (int i = col; i-- > 0;) {
+        if (!is_free_position(row, i)) { break; }
+        is_enemy_position(players_turn, row, i) || is_free_position(row, i) ? possiblePositions.push_back({row, i}) : void();
+        if (is_enemy_position(players_turn, row, i)) { break; }
+      }
+      break;
+    case B:
+      // moving diagonally right up
+      for (int i = row; i-- > 0;) {
+        tempCol++;
+        if (is_ally_position(players_turn, i, tempCol)) { break; }
+        is_enemy_position(players_turn, i, tempCol) || is_free_position(i, tempCol) ? possiblePositions.push_back({i, tempCol}) : void();
+        if (is_enemy_position(players_turn, i, tempCol)) { break; }
+     }
+      tempCol = col;
+      // moving diagonally left down
+      for (int i = row + 1; i < size; i++) {
+       tempCol--;
+        if (is_ally_position(players_turn, i, tempCol)) { break; }
+        is_enemy_position(players_turn, i, tempCol) || is_free_position(i, tempCol) ? possiblePositions.push_back({i, tempCol}) : void();
+        if (is_enemy_position(players_turn, i, tempCol)) { break; }
+     }
+      tempCol = col;
+      // moving diagonally left up
+     for (int i = row; i-- > 0;) {
+       tempCol--;
+        if (is_ally_position(players_turn, i, tempCol)) { break; }
+        is_enemy_position(players_turn, i, tempCol) || is_free_position(i, tempCol) ? possiblePositions.push_back({i, tempCol}) : void();
+        if (is_enemy_position(players_turn, i, tempCol)) { break; }
+     }
+     tempCol = col;
+     // moving diagonally right down
+     for (int i = row + 1; i < size; i++) {
+       tempCol++;
+        if (is_ally_position(players_turn, i, tempCol)) { break; }
+        is_enemy_position(players_turn, i, tempCol) || is_free_position(i, tempCol) ? possiblePositions.push_back({i, tempCol}) : void();
+        if (is_enemy_position(players_turn, i, tempCol)) { break; }
+     }
+     tempCol = col;
+      break;
+    case M:
+      // custom figure Master can go anywhere he pleases (except allied positions)
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            is_enemy_position(players_turn, i, j) || is_free_position(i, j) ? possiblePositions.push_back({i, j}) : void();
+        }
+      }
+      break;
+    case A:
+      // archers can shoot enemies from 3 fields distance and then they pick up their arrow
+      !is_invalid_position(row + 3) && !is_invalid_position(col + 3) && (is_enemy_position(players_turn, row + 3, col + 3) || is_free_position(row + 3, col + 3)) ? possiblePositions.push_back({row + 3, col + 3}) : void();
+      !is_invalid_position(row + 3) && !is_invalid_position(col) && (is_enemy_position(players_turn, row + 3, col) || is_free_position(row + 3, col)) ? possiblePositions.push_back({row + 3, col}) : void();
+      !is_invalid_position(row) && !is_invalid_position(col + 3) && (is_enemy_position(players_turn, row, col + 3) || is_free_position(row, col + 3)) ? possiblePositions.push_back({row, col + 3}) : void();
+      !is_invalid_position(row + 3) && !is_invalid_position(col - 3) && (is_enemy_position(players_turn, row + 3, col - 3) || is_free_position(row + 3, col - 3)) ? possiblePositions.push_back({row + 3, col - 3}) : void();
+      !is_invalid_position(row) && !is_invalid_position(col - 3) && (is_enemy_position(players_turn, row, col - 3) || is_free_position(row, col - 3)) ? possiblePositions.push_back({row, col - 3}) : void();
+      !is_invalid_position(row - 3) && !is_invalid_position(col + 3) && (is_enemy_position(players_turn, row - 3, col + 3) || is_free_position(row - 3, col + 3)) ? possiblePositions.push_back({row - 3, col + 3}) : void();
+      !is_invalid_position(row - 3) && !is_invalid_position(col + 3) && (is_enemy_position(players_turn, row - 3, col) || is_free_position(row - 3, col)) ? possiblePositions.push_back({row - 3, col}) : void();
+      !is_invalid_position(row - 3) && !is_invalid_position(col + 3) && (is_enemy_position(players_turn, row - 3, col - 3) || is_free_position(row - 3, col - 3)) ? possiblePositions.push_back({row - 3, col - 3}) : void();
+      break;
     default:
       break;
   }
+  if (possiblePositions.empty()) { return false; } 
+  return true;
 }
 
 bool Chessboard::is_possible_position(int row, int col) const {
@@ -219,14 +339,18 @@ bool Chessboard::is_possible_position(int row, int col) const {
   bool positionFound = false;
 
   std::vector<Pos>::iterator it = std::find_if(
-      begin(possiblePositions), end(possiblePositions),
-                         [&](const Pos& p) {
-                           if (p.row == currentPosition.row && p.column == currentPosition.column) 
-                           { 
-                               positionFound = true;
-                               return true;
-                           }
-                         });
+      begin(possiblePositions), end(possiblePositions), [&](const Pos& p) {
+        if (p.row == currentPosition.row &&
+            p.column == currentPosition.column) {
+          if (is_enemy_position(players_turn, p.row, p.column) ||
+              is_free_position(p.row, p.column)) {
+            positionFound = true;
+            return true;
+          }
+        } else {
+          return false;
+        }
+      });
   return positionFound;
 }
 
@@ -248,9 +372,13 @@ void Chessboard::show(bool figure_selected) const {
           if (is_possible_position(i, j)) {
             if (this->board[i][j] != NULL) {
               if (this->board[i][j]->get_color() == 0) {
-                cout << '[' << tolower(this->board[i][j]->get_symbol()) << ']';
+                cout << "[";
+                printf("%c", tolower(this->board[i][j]->get_symbol()));
+                cout << "]";
               } else {
-                cout << '[' + this->board[i][j]->get_symbol() + ']';
+                cout << "[";
+                printf("%c", this->board[i][j]->get_symbol());
+                cout << "]";
               }
             } else {
               cout << "[.]";

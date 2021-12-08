@@ -30,3 +30,7 @@ void Chessman::get_info() const {
   }
   cout << " with position: (" << this->position.row << "|" << this->position.column << ")" << endl;
 }
+
+void Chessman::kill() {
+    hasFallen = true;
+}
