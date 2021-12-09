@@ -1,30 +1,40 @@
 #pragma once
 
+#include <iostream>
 #include <ostream>
-#include "Chessboard.h"
 
-const int WHITE = 0;
-const int BLACK = 1;
+using namespace std;
+
+enum Figures {
+  // STANDARD FIGURES:
+  K = 'K',  // King
+  Q = 'Q',  // Queen
+  B = 'B',  // Bishop
+  R = 'R',  // Rook
+  N = 'N',  // Knight
+  P = 'P',  // Pawn
+  // CUSTOM FIGURES:
+  M = 'M',  // Master
+  A = 'A'   // Archer
+};
+enum Colors { WHITE = 1, BLACK = 0 };
 
 class Chessman {
+ protected:   // only visible for inherited objects
+  int color;  // White = 1, Black = 0
+  char symbol{P};
+  bool isEssential{false};  // will lead to a game over if loss
+  bool isSelected{false};
 
-    protected:                  // only visible for inherited objects
-      int color{WHITE};         // White = 0, Black = 1
-      char symbol{'P'};         // Q for Queens, K for Kings, R for Rooks, B for Bishops, K
-                                // for Knights, P fo Pawns
-      bool isEssential{0};      // will lead to a game over if loss
-    public:
-        
-
-    public:
-        Chessman(char symbol, bool is_white);
-        virtual ~Chessman() {}
-        char get_symbol() const;
-        char get_color() const;
-        bool is_white() const;
-        virtual bool is_essential() const { return false; }
-        virtual bool can_move(int from_row, int from_col, int to_row,
-                              int to_col, const Chessboard &cb) const = 0;
-};
-
+ public:
+  bool hasFallen{false};
+  explicit Chessman(char symbol = P, bool is_white = WHITE);
+  virtual ~Chessman() {}
+  virtual char get_symbol() const { return symbol; }
+  virtual int get_color() const { return color; }
+  virtual bool has_fallen() const { return hasFallen; }
+  virtual bool is_white() const { return color == WHITE; }
+  virtual bool is_essential() const { return isEssential; }
+  virtual bool is_selected() const { return isSelected; }
+  virtual void kill();
 };
