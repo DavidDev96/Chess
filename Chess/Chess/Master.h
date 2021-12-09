@@ -12,5 +12,4 @@ class Master : public Chessman {
   virtual int get_color() const { return this->color; }
   virtual bool is_white() const { return this->color == 0 ? true : false; }
   virtual bool is_essential() const { return isEssential; }
-  virtual void get_info() const;
 };

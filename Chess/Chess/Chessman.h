@@ -2,25 +2,29 @@
 
 #include <iostream>
 #include <ostream>
+
 using namespace std;
 
-// Q for Queens, K for Kings, R for Rooks, B for Bishops, K for Knights, P for
-// Pawns, M for Master, A for Archer
-enum Figures { K = 'K', Q = 'Q', B = 'B', R = 'R', N = 'N', P = 'P', M = 'M', A = 'A' };
+enum Figures {
+  // STANDARD FIGURES:
+  K = 'K',  // King
+  Q = 'Q',  // Queen
+  B = 'B',  // Bishop
+  R = 'R',  // Rook
+  N = 'N',  // Knight
+  P = 'P',  // Pawn
+  // CUSTOM FIGURES:
+  M = 'M',  // Master
+  A = 'A'   // Archer
+};
 enum Colors { WHITE = 1, BLACK = 0 };
 
-struct Pos {
-  int row{0};
-  int column{0};
-};
-
 class Chessman {
- protected:          // only visible for inherited objects
+ protected:   // only visible for inherited objects
   int color;  // White = 1, Black = 0
   char symbol{P};
   bool isEssential{false};  // will lead to a game over if loss
   bool isSelected{false};
-  Pos position;
 
  public:
   bool hasFallen{false};
@@ -32,6 +36,5 @@ class Chessman {
   virtual bool is_white() const { return color == WHITE; }
   virtual bool is_essential() const { return isEssential; }
   virtual bool is_selected() const { return isSelected; }
-  virtual void get_info() const;
   virtual void kill();
 };
